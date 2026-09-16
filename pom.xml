@@ -30,7 +30,7 @@
   <groupId>uk.gov.dbt.ndtp.secure-agent.graph</groupId>
   <artifactId>sag-base</artifactId>
   <packaging>pom</packaging>
-  <version>0.90.0-steve</version>
+  <version>0.90.0</version>
 
   <name>IANode Secure Agent Graph - Parent</name>
   <description>IANode Secure Agent Graph</description>
