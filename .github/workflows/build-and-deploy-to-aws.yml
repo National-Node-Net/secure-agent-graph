@@ -85,7 +85,7 @@ jobs:
       env:
         REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         PROJECT_VERSION: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}
-        IMAGE_TAG: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}-${{ github.sha }}
+        IMAGE_TAG: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}-stec-${{ github.sha }}
       run: |
         echo "Building image: $REGISTRY/ndtp/secure-agent-graph:$IMAGE_TAG"
         echo "Using Dockerfile: ${{ github.workspace }}/sag-docker/Dockerfile"
