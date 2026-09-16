@@ -82,24 +82,10 @@ jobs:
 
   build-tag-push:
     needs: build-maven
-    uses: ./.github/workflows/build-tag-push-docker-image-to-ecr.yml@feature/DBAC-3051-deploy-image-to-registry
+    uses: ./.github/workflows/build-tag-and-push-to-ecr.yml
     with:
         image_tag: ${{needs.build-maven.outputs.PROJECT_VERSION}}-${{github.sha}}
         container_repo: 'ndtp/secure-agent-graph'
         path_to_dockerfile: 'sag-docker'
         project_version: ${{needs.build-maven.outputs.PROJECT_VERSION}}
     secrets: inherit
-
-  # copy-config-files:
-  #   needs: build-maven
-  #   uses: National-Node-Net/aws-integration-testing/.github/workflows/copy-files-to-ec2-instance.yml@main
-  #   with:
-  #     directory_name: 'sag-docker/mnt'
-  #   secrets: inherit
-
-  # docker-compose-up:
-  #   needs: [copy-config-files, build-tag-push]
-  #   uses: National-Node-Net/aws-integration-testing/.github/workflows/docker-compose-up.yml@main
-  #   with:
-  #     docker-compose-file-name: 'docker-compose-github.yaml'
-  #   secrets: inherit
