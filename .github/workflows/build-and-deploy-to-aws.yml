@@ -74,7 +74,6 @@ jobs:
         name: all-targets
         path: '**/target/'
 
-
     - name: Configure AWS Creds
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -93,8 +92,8 @@ jobs:
       run: |
         echo "PROJECT_VERSION=$PROJECT_VERSION" >> "$GITHUB_ENV"
         echo "IMAGE_REPOSITORY=${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph" >> "$GITHUB_ENV"
-        echo "IMAGE_TAG=${PROJECT_VERSION}-stec" >> "$GITHUB_ENV"
-        echo "IMAGE_TAG_GHSHA=${PROJECT_VERSION}-stec-${GITHUB_SHA}" >> "$GITHUB_ENV"
+        echo "IMAGE_TAG=${PROJECT_VERSION}" >> "$GITHUB_ENV"
+        echo "IMAGE_TAG_GHSHA=${PROJECT_VERSION}-${GITHUB_SHA}" >> "$GITHUB_ENV"
 
     - name: Docker build / tag
       id: docker-build
