@@ -87,10 +87,8 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v2
 
     - name: Set variables
-      env:
-        PROJECT_VERSION: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}
       run: |
-        echo "PROJECT_VERSION=$PROJECT_VERSION" >> "$GITHUB_ENV"
+        echo "PROJECT_VERSION=${{ steps.get-version-maven.outputs.PROJECT_VERSION }}" >> "$GITHUB_ENV"
         echo "IMAGE_REPOSITORY=${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph" >> "$GITHUB_ENV"
         echo "IMAGE_TAG=${PROJECT_VERSION}" >> "$GITHUB_ENV"
         echo "IMAGE_TAG_GHSHA=${PROJECT_VERSION}-${GITHUB_SHA}" >> "$GITHUB_ENV"
