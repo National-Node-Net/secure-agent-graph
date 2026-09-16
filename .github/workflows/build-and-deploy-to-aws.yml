@@ -32,13 +32,10 @@ permissions:
     id-token: write
 
 jobs:
-  build-maven:
+  build-scan-push:
     runs-on: ubuntu-latest
     env:
       MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
-    outputs:
-      PROJECT_VERSION: ${{ steps.get-version-maven.outputs.PROJECT_VERSION}}
-      FUSEKI_SERVER_VERSION: ${{ steps.get-version-maven.outputs.FUSEKI_SERVER_VERSION }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
@@ -68,24 +65,50 @@ jobs:
           echo "$version"
         }
         PROJECT_VERSION=$(get_version project.version)
-        FUSEKI_SERVER_VERSION=$(get_version ver.fuseki-server)
         echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_OUTPUT
-        echo "FUSEKI_SERVER_VERSION=$FUSEKI_SERVER_VERSION" >> $GITHUB_OUTPUT
         echo $PROJECT_VERSION
 
-    - name: Retain target outputs
-      uses: actions/upload-artifact@v7
+    - name: Configure AWS Creds
+      uses: aws-actions/configure-aws-credentials@v4
       with:
-        name: all-targets
-        path: '**/target/'
+        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecr-access-for-github
+        aws-region: ${{ secrets.AWS_REGION }}
+        role-skip-session-tagging: true
+        role-duration-seconds: 3600
+
+    - name: Login to ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Docker build / tag
+      id: docker-build
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        PROJECT_VERSION: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}
+        IMAGE_TAG: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}-${{ github.sha }}
+      run: |
+        echo "Building image: $REGISTRY/ndtp/secure-agent-graph:$IMAGE_TAG"
+        echo "Using Dockerfile: ${{ github.workspace }}/sag-docker/Dockerfile"
+
+        docker build --no-cache --build-arg PROJECT_VERSION="$PROJECT_VERSION" \
+                    -t "$REGISTRY/ndtp/secure-agent-graph:$IMAGE_TAG" \
+                    -f "${{ github.workspace }}/sag-docker/Dockerfile" .
 
 
-  build-tag-push:
-    needs: build-maven
-    uses: ./.github/workflows/build-tag-and-push-to-ecr.yml
-    with:
-        image_tag: ${{needs.build-maven.outputs.PROJECT_VERSION}}-${{github.sha}}
-        container_repo: 'ndtp/secure-agent-graph'
-        path_to_dockerfile: 'sag-docker'
-        project_version: ${{needs.build-maven.outputs.PROJECT_VERSION}}
-    secrets: inherit
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+      with:
+        image-ref: ${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph:${{ steps.get-version-maven.outputs.PROJECT_VERSION }}-${{ github.sha }}
+        format: table
+        exit-code: 1
+        ignore-unfixed: true
+        severity: "CRITICAL,HIGH"
+      continue-on-error: false  # scan:
+
+    - name: Docker push to ECR
+      id: docker-push
+      env:
+        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}-${{ github.sha }}
+      run: |
+        docker push "$REGISTRY/ndtp/secure-agent-graph:$IMAGE_TAG"
