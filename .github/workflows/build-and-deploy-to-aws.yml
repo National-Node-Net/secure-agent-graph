@@ -121,4 +121,4 @@ jobs:
       id: docker-push
       run: |
         docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
-        docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
+        docker push "$IMAGE_REPOSITORY:$IMAGE_TAG_GHSHA"
