@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-name: SC Graph Build & Deploy
+name: Secure Agent Graph Build & Deploy
 
 on:
   push:

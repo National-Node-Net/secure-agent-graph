@@ -14,7 +14,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-name: Main GHCR Publisher
+name: Maven Build and Test
 
 on:
   push:
