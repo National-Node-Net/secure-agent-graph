@@ -17,6 +17,15 @@ This project follows **Semantic Versioning (SemVer)** ([semver.org](https://semv
 
 ---
 
+## 0.90.3 – 2026-09-16
+
+### Changed
+- Updated GitHub Actions to push images to ecr
+- Removed references to aws-integration-test
+- Fixed dependabot
+
+---
+
 ## 0.90.2 – 2026-08-11
 
 ### Changed
