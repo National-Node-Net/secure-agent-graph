@@ -1,0 +1,94 @@
+name: build-tag-push-docker-image-to-ecr
+on:
+  workflow_dispatch:
+    inputs:
+      container_repo:
+        description: 'ECR repository name'
+        required: true
+        default: 'ndtp/secure-agent-graph'
+        type: string       
+      path_to_dockerfile:
+        description: 'Path to dockerfile'
+        default: sag-docker'
+        required: true
+        type: string
+      image_tag:
+        description: 'Tag of the image'
+        required: true
+        default: '0.0.0'
+        type: string
+      project_version:
+        description: 'Java Project Version'
+        required: true
+        default: '0.82.15-SNAPSHOT'
+        type: string
+  workflow_call:
+    inputs:
+      container_repo:
+        description: 'ECR repository name'
+        required: true
+        default: 'ndtp/secure-agent-graph'
+        type: string
+      path_to_dockerfile:
+        description: 'Path to dockerfile'
+        required: true
+        default: 'sag-docker'
+        type: string
+      image_tag:
+        description: 'Tag of the image'
+        required: true
+        default: '0.0.0'
+        type: string
+      project_version:
+        description: 'Java Project Version'
+        required: true
+        default: '0.82.15-SNAPSHOT'
+        type: string
+
+permissions:
+  id-token: write
+  packages: write
+  contents: read
+
+jobs:
+  build-tag-push-docker-image-to-ecr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Download target dirs
+        if: ${{ github.event_name != 'workflow_dispatch' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: all-targets
+          path: .
+
+      - name: Configure AWS Creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecr-access-for-github
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-skip-session-tagging: true
+          role-duration-seconds: 3600
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Docker build / tag / push ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          echo $REGISTRY/${{ github.event.inputs.container_repo || inputs.container_repo }}:${{ github.event.inputs.image_tag || inputs.image_tag }} -f "${{ github.workspace }}/${{ github.event.inputs.path_to_dockerfile || inputs.path_to_dockerfile }}"
+          docker build --no-cache --build-arg PROJECT_VERSION="${{github.event.inputs.project_version ||inputs.project_version}}" -t $REGISTRY/${{ github.event.inputs.container_repo || inputs.container_repo }}:latest -t $REGISTRY/${{ github.event.inputs.container_repo || inputs.container_repo }}:${{ github.event.inputs.image_tag || inputs.image_tag }} -f "${{ github.workspace }}/${{ github.event.inputs.path_to_dockerfile || inputs.path_to_dockerfile }}/Dockerfile" .
+          docker push --all-tags $REGISTRY/${{ github.event.inputs.container_repo || inputs.container_repo }}
+
+  scan:
+    needs: build-tag-push-docker-image-to-ecr
+    uses: ./.github/workflows/ecr-image-scan.yml
+    with:
+      container_repo: '${{ github.event.inputs.container_repo || inputs.container_repo }}'
+      image_tag: '${{ github.event.inputs.image_tag || inputs.image_tag }}'
+      delete_image: true
+    secrets: inherit
