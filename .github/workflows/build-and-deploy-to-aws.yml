@@ -82,10 +82,10 @@ jobs:
 
   build-tag-push:
     needs: build-maven
-    uses: National-Node-Net/aws-integration-testing/.github/workflows/build-tag-push-docker-image-to-ecr.yml@feature/DBAC-3051-deploy-image-to-registry
+    uses: .github/workflows/build-tag-push-docker-image-to-ecr.yml@feature/DBAC-3051-deploy-image-to-registry
     with:
         image_tag: ${{needs.build-maven.outputs.PROJECT_VERSION}}-${{github.sha}}
-        container_repo: 'secure-agent-graph'
+        container_repo: 'ndtp/secure-agent-graph'
         path_to_dockerfile: 'sag-docker'
         project_version: ${{needs.build-maven.outputs.PROJECT_VERSION}}
     secrets: inherit
