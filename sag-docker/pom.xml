@@ -34,7 +34,7 @@
   <parent>
     <groupId>uk.gov.dbt.ndtp.secure-agent.graph</groupId>
     <artifactId>sag-base</artifactId>
-    <version>0.90.0</version>
+    <version>0.90.0-steve</version>
   </parent>
 
   <properties>
