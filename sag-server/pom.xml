@@ -45,7 +45,7 @@
     <dependency>
       <groupId>uk.gov.dbt.ndtp.secure-agent.graph</groupId>
       <artifactId>sag-system</artifactId>
-      <version>0.90.0</version>
+      <version>0.90.0-steve</version>
     </dependency>
 
   </dependencies>
