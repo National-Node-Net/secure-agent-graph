@@ -63,3 +63,4 @@ sag-system/*.state
 ## Docker container ID file.
 *.cid
 **/.DS_Store
+scripts/test-workflow.sh

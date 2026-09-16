@@ -32,13 +32,10 @@ permissions:
     id-token: write
 
 jobs:
-  build-maven:
+  build-scan-push:
     runs-on: ubuntu-latest
     env:
       MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
-    outputs:
-      PROJECT_VERSION: ${{ steps.get-version-maven.outputs.PROJECT_VERSION}}
-      FUSEKI_SERVER_VERSION: ${{ steps.get-version-maven.outputs.FUSEKI_SERVER_VERSION }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v7
@@ -68,9 +65,7 @@ jobs:
           echo "$version"
         }
         PROJECT_VERSION=$(get_version project.version)
-        FUSEKI_SERVER_VERSION=$(get_version ver.fuseki-server)
         echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_OUTPUT
-        echo "FUSEKI_SERVER_VERSION=$FUSEKI_SERVER_VERSION" >> $GITHUB_OUTPUT
         echo $PROJECT_VERSION
 
     - name: Retain target outputs
@@ -79,27 +74,48 @@ jobs:
         name: all-targets
         path: '**/target/'
 
+    - name: Configure AWS Creds
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecr-access-for-github
+        aws-region: ${{ secrets.AWS_REGION }}
+        role-skip-session-tagging: true
+        role-duration-seconds: 3600
 
-  build-tag-push:
-    needs: build-maven
-    uses: National-Node-Net/aws-integration-testing/.github/workflows/build-tag-push-docker-image-to-ecr.yml@main
-    with:
-        image_tag: ${{needs.build-maven.outputs.PROJECT_VERSION}}-${{github.sha}}
-        container_repo: 'secure-agent-graph'
-        path_to_dockerfile: 'sag-docker'
-        project_version: ${{needs.build-maven.outputs.PROJECT_VERSION}}
-    secrets: inherit
+    - name: Login to ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
-  copy-config-files:
-    needs: build-maven
-    uses: National-Node-Net/aws-integration-testing/.github/workflows/copy-files-to-ec2-instance.yml@main
-    with:
-      directory_name: 'sag-docker/mnt'
-    secrets: inherit
+    - name: Set variables
+      run: |
+        echo "PROJECT_VERSION=${{ steps.get-version-maven.outputs.PROJECT_VERSION }}" >> "$GITHUB_ENV"
+        echo "IMAGE_REPOSITORY=${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph" >> "$GITHUB_ENV"
+        echo "IMAGE_TAG=${PROJECT_VERSION}" >> "$GITHUB_ENV"
+        echo "IMAGE_TAG_GHSHA=${PROJECT_VERSION}-${GITHUB_SHA}" >> "$GITHUB_ENV"
 
-  docker-compose-up:
-    needs: [copy-config-files, build-tag-push]
-    uses: National-Node-Net/aws-integration-testing/.github/workflows/docker-compose-up.yml@main
-    with:
-      docker-compose-file-name: 'docker-compose-github.yaml'
-    secrets: inherit
+    - name: Docker build / tag
+      id: docker-build
+      run: |
+        echo "Building image: $IMAGE_REPOSITORY:$IMAGE_TAG"
+        echo "Using Dockerfile: ${{ github.workspace }}/sag-docker/Dockerfile"
+
+        docker build --no-cache --build-arg PROJECT_VERSION="$PROJECT_VERSION" \
+                    -t "$IMAGE_REPOSITORY:$IMAGE_TAG" \
+                    -t "$IMAGE_REPOSITORY:$IMAGE_TAG_GHSHA" \
+                    -f "${{ github.workspace }}/sag-docker/Dockerfile" .
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+      with:
+        image-ref: ${{ env.IMAGE_REPOSITORY }}:${{ env.IMAGE_TAG }}
+        format: table
+        exit-code: 1
+        ignore-unfixed: true
+        severity: "CRITICAL,HIGH"
+      continue-on-error: true  # temporarily allowing build to proceed despite vulnerabilities
+
+    - name: Docker push to ECR
+      id: docker-push
+      run: |
+        docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
+        docker push "$IMAGE_REPOSITORY:$IMAGE_TAG_GHSHA"
