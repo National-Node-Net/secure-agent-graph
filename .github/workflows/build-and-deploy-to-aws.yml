@@ -82,7 +82,7 @@ jobs:
 
   build-tag-push:
     needs: build-maven
-    uses: .github/workflows/build-tag-push-docker-image-to-ecr.yml@feature/DBAC-3051-deploy-image-to-registry
+    uses: ./.github/workflows/build-tag-push-docker-image-to-ecr.yml@feature/DBAC-3051-deploy-image-to-registry
     with:
         image_tag: ${{needs.build-maven.outputs.PROJECT_VERSION}}-${{github.sha}}
         container_repo: 'ndtp/secure-agent-graph'
