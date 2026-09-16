@@ -68,6 +68,13 @@ jobs:
         echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_OUTPUT
         echo $PROJECT_VERSION
 
+    - name: Retain target outputs
+      uses: actions/upload-artifact@v7
+      with:
+        name: all-targets
+        path: '**/target/'
+
+
     - name: Configure AWS Creds
       uses: aws-actions/configure-aws-credentials@v4
       with:
@@ -88,7 +95,7 @@ jobs:
         echo "IMAGE_REPOSITORY=${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph" >> "$GITHUB_ENV"
         echo "IMAGE_TAG=${PROJECT_VERSION}-stec" >> "$GITHUB_ENV"
         echo "IMAGE_TAG_GHSHA=${PROJECT_VERSION}-stec-${GITHUB_SHA}" >> "$GITHUB_ENV"
-        
+
     - name: Docker build / tag
       id: docker-build
       run: |
@@ -113,4 +120,5 @@ jobs:
     - name: Docker push to ECR
       id: docker-push
       run: |
+        docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
         docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
