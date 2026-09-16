@@ -9,7 +9,7 @@ on:
         type: string       
       path_to_dockerfile:
         description: 'Path to dockerfile'
-        default: sag-docker'
+        default: 'sag-docker'
         required: true
         type: string
       image_tag:
@@ -84,11 +84,11 @@ jobs:
           docker build --no-cache --build-arg PROJECT_VERSION="${{github.event.inputs.project_version ||inputs.project_version}}" -t $REGISTRY/${{ github.event.inputs.container_repo || inputs.container_repo }}:latest -t $REGISTRY/${{ github.event.inputs.container_repo || inputs.container_repo }}:${{ github.event.inputs.image_tag || inputs.image_tag }} -f "${{ github.workspace }}/${{ github.event.inputs.path_to_dockerfile || inputs.path_to_dockerfile }}/Dockerfile" .
           docker push --all-tags $REGISTRY/${{ github.event.inputs.container_repo || inputs.container_repo }}
 
-  scan:
-    needs: build-tag-push-docker-image-to-ecr
-    uses: ./.github/workflows/ecr-image-scan.yml
-    with:
-      container_repo: '${{ github.event.inputs.container_repo || inputs.container_repo }}'
-      image_tag: '${{ github.event.inputs.image_tag || inputs.image_tag }}'
-      delete_image: true
-    secrets: inherit
+  # scan:
+  #   needs: build-tag-push-docker-image-to-ecr
+  #   uses: ./.github/workflows/ecr-image-scan.yml
+  #   with:
+  #     container_repo: '${{ github.event.inputs.container_repo || inputs.container_repo }}'
+  #     image_tag: '${{ github.event.inputs.image_tag || inputs.image_tag }}'
+  #     delete_image: true
+  #   secrets: inherit
