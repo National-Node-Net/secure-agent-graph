@@ -80,25 +80,28 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
+    - name: Set variables
+      env:
+        PROJECT_VERSION: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}
+      run: |
+        echo "PROJECT_VERSION=$PROJECT_VERSION" >> "$GITHUB_ENV"
+        echo "IMAGE_REPOSITORY=${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph" >> "$GITHUB_ENV"
+        echo "IMAGE_TAG=${PROJECT_VERSION}-stec-${GITHUB_SHA}" >> "$GITHUB_ENV"
+
     - name: Docker build / tag
       id: docker-build
-      env:
-        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        PROJECT_VERSION: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}
-        IMAGE_TAG: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}-stec-${{ github.sha }}
       run: |
-        echo "Building image: $REGISTRY/ndtp/secure-agent-graph:$IMAGE_TAG"
+        echo "Building image: $IMAGE_REPOSITORY:$IMAGE_TAG"
         echo "Using Dockerfile: ${{ github.workspace }}/sag-docker/Dockerfile"
 
         docker build --no-cache --build-arg PROJECT_VERSION="$PROJECT_VERSION" \
-                    -t "$REGISTRY/ndtp/secure-agent-graph:$IMAGE_TAG" \
+                    -t "$IMAGE_REPOSITORY:$IMAGE_TAG" \
                     -f "${{ github.workspace }}/sag-docker/Dockerfile" .
-
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
       with:
-        image-ref: ${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph:${{ steps.get-version-maven.outputs.PROJECT_VERSION }}-${{ github.sha }}
+        image-ref: ${{ env.IMAGE_REPOSITORY }}:${{ env.IMAGE_TAG }}
         format: table
         exit-code: 1
         ignore-unfixed: true
@@ -107,8 +110,5 @@ jobs:
 
     - name: Docker push to ECR
       id: docker-push
-      env:
-        REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        IMAGE_TAG: ${{ steps.get-version-maven.outputs.PROJECT_VERSION }}-${{ github.sha }}
       run: |
-        docker push "$REGISTRY/ndtp/secure-agent-graph:$IMAGE_TAG"
+        docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
