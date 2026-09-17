@@ -1,25 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
 # © Crown Copyright 2025. This work has been developed by the National Digital Twin Programme
 # and is legally attributed to the Department for Business and Trade (UK) as the governing entity.
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
 
 name: Secure Agent Graph Build & Deploy
 
 on:
   push:
     branches:
-      - 'develop'
+      - develop
   workflow_dispatch:
 
 concurrency:
@@ -27,95 +15,14 @@ concurrency:
   cancel-in-progress: ${{ !contains(github.ref_name, 'release/') }}
 
 permissions:
-    contents: read
-    packages: write
-    id-token: write
+  contents: read
+  packages: write
+  id-token: write
 
 jobs:
   build-scan-push:
-    runs-on: ubuntu-latest
-    env:
-      MAVEN_CLI_OPTS: "--batch-mode --no-transfer-progress"
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v7
-
-    - name: Set up JDK 21
-      uses: actions/setup-java@v5
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-        cache: 'maven'
-        cache-dependency-path: 'pom.xml'
-
-    - name: Configure Maven settings
-      run: |
-        mkdir -p ~/.m2
-        echo "<settings><servers><server><id>github</id><username>${{ github.actor }}</username><password>${{ secrets.GH_PACKAGES_PAT }}</password></server></servers></settings>" > ~/.m2/settings.xml
-
-    - name: Debug Maven settings
-      run: cat ~/.m2/settings.xml
-
-    - name: Build with Maven
-      id: get-version-maven
-      run: |
-        mvn clean install $MAVEN_CLI_OPTS -Dgpg.skip=true -Dlicense.skip=true
-        function get_version(){
-          local version=$(mvn -q -f pom.xml -Dexec.executable=echo -Dexec.args="\${$1}" --non-recursive exec:exec)
-          echo "$version"
-        }
-        PROJECT_VERSION=$(get_version project.version)
-        echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_OUTPUT
-        echo $PROJECT_VERSION
-
-    - name: Retain target outputs
-      uses: actions/upload-artifact@v7
-      with:
-        name: all-targets
-        path: '**/target/'
-
-    - name: Configure AWS Creds
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/ecr-access-for-github
-        aws-region: ${{ secrets.AWS_REGION }}
-        role-skip-session-tagging: true
-        role-duration-seconds: 3600
-
-    - name: Login to ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
-
-    - name: Set variables
-      run: |
-        echo "PROJECT_VERSION=${{ steps.get-version-maven.outputs.PROJECT_VERSION }}" >> "$GITHUB_ENV"
-        echo "IMAGE_REPOSITORY=${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph" >> "$GITHUB_ENV"
-        echo "IMAGE_TAG=${PROJECT_VERSION}" >> "$GITHUB_ENV"
-        echo "IMAGE_TAG_GHSHA=${PROJECT_VERSION}-${GITHUB_SHA}" >> "$GITHUB_ENV"
-
-    - name: Docker build / tag
-      id: docker-build
-      run: |
-        echo "Building image: $IMAGE_REPOSITORY:$IMAGE_TAG"
-        echo "Using Dockerfile: ${{ github.workspace }}/sag-docker/Dockerfile"
-
-        docker build --no-cache --build-arg PROJECT_VERSION="$PROJECT_VERSION" \
-                    -t "$IMAGE_REPOSITORY:$IMAGE_TAG" \
-                    -t "$IMAGE_REPOSITORY:$IMAGE_TAG_GHSHA" \
-                    -f "${{ github.workspace }}/sag-docker/Dockerfile" .
-
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
-      with:
-        image-ref: ${{ env.IMAGE_REPOSITORY }}:${{ env.IMAGE_TAG }}
-        format: table
-        exit-code: 1
-        ignore-unfixed: true
-        severity: "CRITICAL,HIGH"
-      continue-on-error: true  # temporarily allowing build to proceed despite vulnerabilities
-
-    - name: Docker push to ECR
-      id: docker-push
-      run: |
-        docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
-        docker push "$IMAGE_REPOSITORY:$IMAGE_TAG_GHSHA"
+    name: Build and push development image
+    uses: ./.github/workflows/build-container.yml
+    with:
+      image-tag-suffix: dev-${{ github.sha }}
+    secrets: inherit
