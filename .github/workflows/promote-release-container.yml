@@ -1,0 +1,118 @@
+# SPDX-License-Identifier: Apache-2.0
+# © Crown Copyright 2026. This work has been developed by the National Digital Twin Programme
+# and is legally attributed to the Department for Business and Trade (UK) as the governing entity.
+
+name: Promote Release Container
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Source ECR environment
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+      destination:
+        description: Destination ECR environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+      version:
+        description: Container version to promote, for example 0.90.4
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      source:
+        description: Source ECR environment
+        required: true
+        type: string
+      destination:
+        description: Destination ECR environment
+        required: true
+        type: string
+      version:
+        description: Container version to promote
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  promote:
+    name: Promote ${{ inputs.version }} from ${{ inputs.source }} to ${{ inputs.destination }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.destination }}
+    steps:
+      - name: Validate inputs
+        env:
+          SOURCE: ${{ inputs.source }}
+          DESTINATION: ${{ inputs.destination }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          ROUTE="${SOURCE}-${DESTINATION}"
+          if [[ "$ROUTE" != "dev-staging" && "$ROUTE" != "staging-prod" ]]; then
+            echo "Invalid promotion route: $ROUTE" >&2
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must use x.y.z format." >&2
+            exit 1
+          fi
+
+      - name: Install ORAS
+        uses: oras-project/setup-oras@v1
+
+      - name: Configure source AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: "arn:aws:iam::${{ secrets[format('AWS_ACCOUNT_ID_{0}', inputs.source)] }}:role/ecr-access-for-github"
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-skip-session-tagging: true
+          role-duration-seconds: 3600
+
+      - name: Login to source ECR
+        id: source-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Configure destination AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: "arn:aws:iam::${{ secrets[format('AWS_ACCOUNT_ID_{0}', inputs.destination)] }}:role/ecr-access-for-github"
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-skip-session-tagging: true
+          role-duration-seconds: 3600
+
+      - name: Login to destination ECR
+        id: destination-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Promote container
+        env:
+          SOURCE_REGISTRY: ${{ steps.source-ecr.outputs.registry }}
+          DESTINATION_REGISTRY: ${{ steps.destination-ecr.outputs.registry }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          oras cp \
+            "$SOURCE_REGISTRY/ndtp/secure-agent-graph:$VERSION" \
+            "$DESTINATION_REGISTRY/ndtp/secure-agent-graph:$VERSION"
+
+      - name: Logout of ECR registries
+        if: always()
+          run: |
+          docker logout "${{ steps.source-ecr.outputs.registry }}" || true
+          docker logout "${{ steps.destination-ecr.outputs.registry }}" || true
+
+      - name: Summarise promotion
+        env:
+          SOURCE: ${{ inputs.source }}
+          DESTINATION: ${{ inputs.destination }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          echo "Promoted secure-agent-graph:$VERSION from $SOURCE to $DESTINATION." >> "$GITHUB_STEP_SUMMARY"
