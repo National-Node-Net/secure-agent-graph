@@ -105,7 +105,7 @@ jobs:
 
       - name: Logout of ECR registries
         if: always()
-          run: |
+        run: |
           docker logout "${{ steps.source-ecr.outputs.registry }}" || true
           docker logout "${{ steps.destination-ecr.outputs.registry }}" || true
 
