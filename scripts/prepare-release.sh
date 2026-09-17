@@ -9,9 +9,10 @@
 #   5. Commit and push the preparation branch.
 #   6. Open a pull request into develop.
 #
-# After the PR is reviewed and merged, build-and-deploy-to-aws.yml publishes
-# the development image. Create release/<version> from develop with no further
-# commits, then open its pull request into main to publish the formal release.
+# After the PR is reviewed and merged, build-and-push-dev-container.yml
+# publishes the development image. Create release/<version> from develop with
+# no further commits, then open its pull request into main to publish the
+# formal release via publish-github-release.yml.
 
 set -euo pipefail
 

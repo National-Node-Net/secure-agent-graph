@@ -2,8 +2,7 @@
 # © Crown Copyright 2025. This work has been developed by the National Digital Twin Programme
 # and is legally attributed to the Department for Business and Trade (UK) as the governing entity.
 
-name: Secure Agent Graph Build & Deploy
-
+name: Build and Publish Dev Container
 on:
   push:
     branches:
@@ -21,8 +20,9 @@ permissions:
 
 jobs:
   build-scan-push:
+    # always build a dev (development) image
     name: Build and push development image
-    uses: ./.github/workflows/build-container.yml
+    uses: ./.github/workflows/build-and-push-container.yml
     with:
       image-tag-suffix: dev-${{ github.sha }}
     secrets: inherit
