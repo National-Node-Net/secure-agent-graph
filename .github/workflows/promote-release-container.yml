@@ -99,8 +99,11 @@ jobs:
           DESTINATION_REGISTRY: ${{ steps.destination-ecr.outputs.registry }}
           VERSION: ${{ inputs.version }}
         run: |
+          DIGEST=$(oras resolve "$SOURCE_REGISTRY/ndtp/secure-agent-graph:$VERSION")
+          echo "Promoting $VERSION ($DIGEST)"
+
           oras cp \
-            "$SOURCE_REGISTRY/ndtp/secure-agent-graph:$VERSION" \
+            "$SOURCE_REGISTRY/ndtp/secure-agent-graph@$DIGEST" \
             "$DESTINATION_REGISTRY/ndtp/secure-agent-graph:$VERSION"
 
       - name: Logout of ECR registries
