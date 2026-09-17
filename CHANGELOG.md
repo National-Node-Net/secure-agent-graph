@@ -17,7 +17,7 @@ This project follows **Semantic Versioning (SemVer)** ([semver.org](https://semv
 
 ---
 
-## 0.90.3 – 2026-09-16
+## 0.90.3 – 2026-09-17
 
 ### Changed
 - Updated GitHub Actions to push images to ecr
