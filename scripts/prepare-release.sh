@@ -98,10 +98,40 @@ git add pom.xml sag-server/pom.xml sag-system/pom.xml sag-docker/pom.xml CHANGEL
 git commit -m "chore: prepare release ${version}"
 git push --set-upstream origin "${prepare_branch}"
 
+body_text=$(cat <<EOF
+Updates the Maven project version to ${version} before creating release/${version}.
+
+This PR was generated from script \`/scripts/prepare-release.sh\`.
+
+## Next steps - to produce a release
+
+1. Review and merge this PR into \`develop\`.
+2. After the merge has completed, update your local \`develop\` branch:
+
+       git switch develop
+       git pull --ff-only origin develop
+
+3. Create and push the release branch from \`develop\`. Do not make any commits
+   on the release branch:
+
+       git switch -c release/${version}
+       git push --set-upstream origin release/${version}
+
+4. Open the release PR into \`main\`:
+
+       gh pr create --base main --head release/${version} --title "Release ${version}" --body "Release ${version}."
+
+5. Review and merge the \`release/${version}\` PR into \`main\`.
+
+Merging the release PR creates Git tag \`v${version}\`, publishes GitHub
+Release \`v${version}\`, and builds the release container tagged \`${version}\`.
+EOF
+)
+
 gh pr create \
   --base develop \
   --head "${prepare_branch}" \
   --title "chore: prepare release ${version}" \
-  --body "Updates the Maven project version to ${version} before creating release/${version}."
+  --body "$body_text"
 
 echo "Preparation PR created. After it is reviewed and merged, create release/${version} from develop."
