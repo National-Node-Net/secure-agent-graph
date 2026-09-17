@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MAVEN_CLI_OPTS: --batch-mode --no-transfer-progress
-      IMAGE_TAG_SUFFIX: ${{ inputs['image-tag-suffix'] }}
+      IMAGE_TAG_SUFFIX: ${{ inputs.image-tag-suffix }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
