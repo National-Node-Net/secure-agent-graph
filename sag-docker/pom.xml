@@ -34,12 +34,12 @@
   <parent>
     <groupId>uk.gov.dbt.ndtp.secure-agent.graph</groupId>
     <artifactId>sag-base</artifactId>
-    <version>0.90.0</version>
+    <version>0.90.4</version>
   </parent>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.build.outputTimestamp>2024-12-23T08:58:20Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-09-17T15:08:27Z</project.build.outputTimestamp>
   </properties>
 
   <dependencies>
