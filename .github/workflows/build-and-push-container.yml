@@ -110,7 +110,7 @@ jobs:
             tag_cli+=(--tag "$image_tag")
           done
 
-          echo "tag_cli is >>> =${tag_cli}}"  
+          printf 'tag_cli item: <%s>\n' "${tag_cli[@]}"
 
           # docker build --no-cache \
           #   --build-arg PROJECT_VERSION="${{ steps.maven.outputs.project_version }}" \
