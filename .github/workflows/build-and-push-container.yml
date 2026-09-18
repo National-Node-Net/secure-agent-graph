@@ -89,7 +89,7 @@ jobs:
           PROJECT_VERSION: "0.0.0" # ${{ steps.maven.outputs.project_version }}
         run: |
 
-          echo "IMAGE_REPOSITORY=${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph" >> "$GITHUB_ENV"
+          IMAGE_REPOSITORY=${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph"
 
           tagsArray=()
           tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}")      
