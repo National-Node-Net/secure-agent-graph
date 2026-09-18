@@ -18,6 +18,11 @@ name: Build and Push Container
 on:
   workflow_call:
     inputs:
+      image-tag-env:
+        description: Optional environment for the image tag
+        required: false
+        default: ''
+        type: string
       image-tag-suffix:
         description: Optional suffix appended to the Maven project version
         required: false
@@ -33,6 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MAVEN_CLI_OPTS: --batch-mode --no-transfer-progress
+      IMAGE_TAG_ENV: ${{ inputs.image-tag-env }}
       IMAGE_TAG_SUFFIX: ${{ inputs.image-tag-suffix }}
     steps:
       - name: Checkout code
@@ -83,15 +89,17 @@ jobs:
           PROJECT_VERSION: ${{ steps.maven.outputs.project_version }}
         run: |
           echo "IMAGE_REPOSITORY=${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph" >> "$GITHUB_ENV"
-          echo "IMAGE_TAG=${PROJECT_VERSION}${IMAGE_TAG_SUFFIX:+-${IMAGE_TAG_SUFFIX}}" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG=${PROJECT_VERSION}${IMAGE_TAG_ENV:+-${IMAGE_TAG_ENV}}${IMAGE_TAG_SUFFIX:+-${IMAGE_TAG_SUFFIX}}" >> "$GITHUB_ENV"
+          echo "IMAGE_TAG_LATEST=${PROJECT_VERSION}${IMAGE_TAG_ENV:+-${IMAGE_TAG_ENV}}-latest" >> "$GITHUB_ENV"
 
       - name: Build container
         run: |
           echo "Building image: $IMAGE_REPOSITORY:$IMAGE_TAG"
           docker build --no-cache \
             --build-arg PROJECT_VERSION="${{ steps.maven.outputs.project_version }}" \
-            --tag "$IMAGE_REPOSITORY:$IMAGE_TAG" \
-            --file "${{ github.workspace }}/sag-docker/Dockerfile" .
+            --tag "$IMAGE_REPOSITORY:$IMAGE_TAG" \       
+            --tag "$IMAGE_REPOSITORY:$IMAGE_TAG_LATEST" \
+           --file "${{ github.workspace }}/sag-docker/Dockerfile" .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
@@ -104,4 +112,6 @@ jobs:
         continue-on-error: true
 
       - name: Push container to ECR
-        run: docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
+        run: |
+          docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
+          docker push "$IMAGE_REPOSITORY:$IMAGE_TAG_LATEST"
