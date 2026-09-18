@@ -29,10 +29,22 @@ permissions:
   id-token: write
 
 jobs:
+  image-metadata:
+    name: Generate image tag suffix
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag-suffix: ${{ steps.tag.outputs.image-tag-suffix }}
+    steps:
+      - name: Generate image tag suffix
+        id: tag
+        shell: bash
+        run: echo "image-tag-suffix=$(date -u +'%Y%m%d%H%M%S')-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
   build-scan-push:
-    # always build a dev (development) image
     name: Build and push development image
+    needs: image-metadata
     uses: ./.github/workflows/build-and-push-container.yml
     with:
-      image-tag-suffix: dev-${{ github.sha }}
+      image-tag-env: dev
+      image-tag-suffix: ${{ needs.image-metadata.outputs.image-tag-suffix }}
     secrets: inherit
