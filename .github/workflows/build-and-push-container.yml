@@ -100,20 +100,12 @@ jobs:
           echo "image_tags=${tagsArray[*]}" >> "$GITHUB_ENV"
           echo "first_image_tag=${tagsArray[0]}" >> "$GITHUB_ENV"
 
-          cat $GITHUB_ENV
-
       - name: Build container
         run: |
           for image_tag in $image_tags; do
             tag_cli+=(--tag "$image_tag")
           done
-
-          printf 'tag_cli item: <%s>\n' "${tag_cli[@]}"
-
-          echo "docker build -no-cache --build-arg PROJECT_VERSION=${{ steps.maven.outputs.project_version }} ${tag_cli[@]}"
-
-          echo "trivy scan [${image_tags%% *}]"
-
+          
           docker build --no-cache \
             --build-arg PROJECT_VERSION="${{ steps.maven.outputs.project_version }}" \
             "${tag_cli[@]}" \
