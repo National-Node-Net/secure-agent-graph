@@ -34,5 +34,5 @@ jobs:
     uses: ./.github/workflows/build-and-push-container.yml
     with:
       generate-nonprod-tags: true
-      extra-tags: "dev-latest"
+      extra-tag: "dev-latest"
     secrets: inherit
