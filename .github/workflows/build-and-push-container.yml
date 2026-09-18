@@ -18,7 +18,7 @@ name: Build and Push Container
 on:
   workflow_call:
     inputs:
-      generate-standard-tags:
+      generate-nonprod-tags:
         description: Create timestamp and commit-SHA image tags in addition to the latest tag
         required: false
         default: false
@@ -85,10 +85,9 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Set image details
-        env:
-          PROJECT_VERSION: "0.0.0" ## ${{ steps.maven.outputs.project_version }}
         run: |
 
+          PROJECT_VERSION="${{ steps.maven.outputs.project_version }}"
           IMAGE_REPOSITORY="${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph"
 
           if [[ "$GENERATE_NONPROD_TAGS" == "true" ]]; then
