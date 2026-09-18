@@ -59,12 +59,12 @@ jobs:
           mkdir -p ~/.m2
           echo "<settings><servers><server><id>github</id><username>${{ github.actor }}</username><password>${{ secrets.GH_PACKAGES_PAT }}</password></server></servers></settings>" > ~/.m2/settings.xml
 
-        # - name: Build with Maven
-        #   id: maven
-        #   run: |
-        #     mvn clean install $MAVEN_CLI_OPTS -Dgpg.skip=true -Dlicense.skip=true
-        #     PROJECT_VERSION=$(mvn -q -f pom.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
-        #     echo "project_version=$PROJECT_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Build with Maven
+        id: maven
+        run: |
+          mvn clean install $MAVEN_CLI_OPTS -Dgpg.skip=true -Dlicense.skip=true
+          PROJECT_VERSION=$(mvn -q -f pom.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+          echo "project_version=$PROJECT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Retain target outputs
         uses: actions/upload-artifact@v7
@@ -86,7 +86,6 @@ jobs:
 
       - name: Set image details
         run: |
-
           PROJECT_VERSION="${{ steps.maven.outputs.project_version }}"
           IMAGE_REPOSITORY="${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph"
 
@@ -99,6 +98,7 @@ jobs:
           fi
 
           echo "image_tags=${tagsArray[*]}" >> "$GITHUB_ENV"
+          echo "first_image_tag=${tagsArray[0]}" >> "$GITHUB_ENV"
 
           cat $GITHUB_ENV
 
@@ -114,15 +114,15 @@ jobs:
 
           echo "trivy scan [${image_tags%% *}]"
 
-          # docker build --no-cache \
-          #   --build-arg PROJECT_VERSION="${{ steps.maven.outputs.project_version }}" \
-          #   "${tag_cli[@]}" \
-          #   --file "${{ github.workspace }}/sag-docker/Dockerfile" .
+          docker build --no-cache \
+            --build-arg PROJECT_VERSION="${{ steps.maven.outputs.project_version }}" \
+            "${tag_cli[@]}" \
+            --file "${{ github.workspace }}/sag-docker/Dockerfile" .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
-          image-ref: "${image_tags%% *}" # pick first image tag in list
+          image-ref: ${{ env.first_image_tag }}
           format: table
           exit-code: 1
           ignore-unfixed: true
