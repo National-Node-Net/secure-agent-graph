@@ -110,23 +110,25 @@ jobs:
             tag_cli+=(--tag "$image_tag")
           done
 
-          docker build --no-cache \
-            --build-arg PROJECT_VERSION="${{ steps.maven.outputs.project_version }}" \
-            "${tag_cli}" \
-            --file "${{ github.workspace }}/sag-docker/Dockerfile" .
+          echo "tag_cli is >>> =${tag_cli}}"  
 
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
-        with:
-          image-ref: ${{ env.IMAGE_REPOSITORY }}:${{ env.IMAGE_TAG_SHA }}
-          format: table
-          exit-code: 1
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
-        continue-on-error: true
+          # docker build --no-cache \
+          #   --build-arg PROJECT_VERSION="${{ steps.maven.outputs.project_version }}" \
+          #   "${tag_cli}" \
+          #   --file "${{ github.workspace }}/sag-docker/Dockerfile" .
 
-      - name: Push container to ECR
-        run: |
-          for image_tag in $image_tags; do
-            docker push "$image_tag"
-          done
+      # - name: Run Trivy vulnerability scanner
+      #   uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
+      #   with:
+      #     image-ref: ${{ env.IMAGE_REPOSITORY }}:${{ env.IMAGE_TAG_SHA }}
+      #     format: table
+      #     exit-code: 1
+      #     ignore-unfixed: true
+      #     severity: CRITICAL,HIGH
+      #   continue-on-error: true
+
+      # - name: Push container to ECR
+      #   run: |
+      #     for image_tag in $image_tags; do
+      #       docker push "$image_tag"
+      #     done
