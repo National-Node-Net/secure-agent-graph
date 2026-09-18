@@ -31,8 +31,6 @@ concurrency:
 
 permissions:
     contents: read
-    packages: write
-    id-token: write
 jobs:
   build-maven:
     runs-on: ubuntu-latest
