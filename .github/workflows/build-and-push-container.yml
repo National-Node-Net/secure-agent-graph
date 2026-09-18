@@ -107,14 +107,14 @@ jobs:
       - name: Build container
         run: |
           for image_tag in $image_tags; do
-            tag_cli+=(--tag "$image_tag")
+            tag_cli+=("--tag $image_tag")
           done
 
           printf 'tag_cli item: <%s>\n' "${tag_cli[@]}"
 
           # docker build --no-cache \
           #   --build-arg PROJECT_VERSION="${{ steps.maven.outputs.project_version }}" \
-          #   "${tag_cli}" \
+          #   "${tag_cli[@]}" \
           #   --file "${{ github.workspace }}/sag-docker/Dockerfile" .
 
       # - name: Run Trivy vulnerability scanner
