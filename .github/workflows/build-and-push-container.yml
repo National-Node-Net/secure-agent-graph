@@ -86,7 +86,7 @@ jobs:
 
       - name: Set image details
         env:
-          PROJECT_VERSION: "0.0.0"                      ## ${{ steps.maven.outputs.project_version }}
+          PROJECT_VERSION: "0.0.0" ## ${{ steps.maven.outputs.project_version }}
         run: |
 
           IMAGE_REPOSITORY="${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph"
@@ -111,7 +111,7 @@ jobs:
 
           printf 'tag_cli item: <%s>\n' "${tag_cli[@]}"
 
-          echo "docker build -no-cache --build-arg PROJECT_VERSION=${{ steps.maven.outputs.project_version } ${tag_cli[@]}"
+          echo "docker build -no-cache --build-arg PROJECT_VERSION=${{ steps.maven.outputs.project_version }} ${tag_cli[@]}"
 
           echo "trivy scan [${image_tags%% *}]"
 
