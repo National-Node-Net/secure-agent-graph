@@ -32,7 +32,7 @@ jobs:
    build-scan-push:
     name: Build and push development image
     uses: ./.github/workflows/build-and-push-container.yml
-    with:
-      # generate-nonprod-tags: true
-      # extra-tags: "dev-latest"
+    # with:
+    #   # generate-nonprod-tags: true
+    #   # extra-tags: "dev-latest"
     secrets: inherit
