@@ -92,7 +92,7 @@ jobs:
           if [[ "$GENERATE_NONPROD_TAGS" == "true" ]]; then
             tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-$(date -u +'%Y%m%d%H%M%S')") 
             tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-${GITHUB_SHA}")
-            tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-${EXTRA_TAG}")
+            [[ -n "$EXTRA_TAG" ]] && tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-${EXTRA_TAG}")
           else
             tagsArray=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}")      
           fi
@@ -124,5 +124,5 @@ jobs:
       - name: Push container to ECR
         run: |
           for image_tag in $image_tags; do
-            docker push "$image_tag"
+            echo docker push "$image_tag"
           done
