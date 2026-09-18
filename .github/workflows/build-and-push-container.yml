@@ -18,7 +18,7 @@ name: Build and Push Container
 on:
   workflow_call:
     inputs:
-      generate-standard-tags:
+      generate-nonprod-tags:
         description: Create timestamp and commit-SHA image tags in addition to the latest tag
         required: false
         default: true
@@ -88,18 +88,17 @@ jobs:
         env:
           PROJECT_VERSION: ${{ steps.maven.outputs.project_version }}
         run: |
-
           IMAGE_REPOSITORY="${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph"
 
           tagsArray=()
-          tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}")      
-
-          if [[ "$GENERATE_STANDARD_TAGS" == "true" ]]; then
+          if [[ "$GENERATE_NONPROD_TAGS" == "true" ]]; then
             tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-$(date -u +'%Y%m%d%H%M%S')") 
             tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-${GITHUB_SHA}")
             tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-${EXTRA_TAGS}")
-          fi
-
+          else
+            tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}") 
+          fi    
+          
           echo "image_tags=${tagsArray[*]}" >> "$GITHUB_ENV"
 
           cat $GITHUB_ENV
