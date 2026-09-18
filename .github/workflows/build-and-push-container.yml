@@ -18,13 +18,13 @@ name: Build and Push Container
 on:
   workflow_call:
     inputs:
-      image-tag-env:
-        description: Optional environment for the image tag
+      generate-standard-tags:
+        description: Create timestamp and commit-SHA image tags in addition to the latest tag
         required: false
-        default: ''
-        type: string
-      image-tag-suffix:
-        description: Optional suffix appended to the Maven project version
+        default: true
+        type: boolean
+      extra-tags:
+        description: Optional space-separated tags appended to the Maven project version
         required: false
         default: ''
         type: string
@@ -38,8 +38,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MAVEN_CLI_OPTS: --batch-mode --no-transfer-progress
-      IMAGE_TAG_ENV: ${{ inputs.image-tag-env }}
-      IMAGE_TAG_SUFFIX: ${{ inputs.image-tag-suffix }}
+      GENERATE_STANDARD_TAGS: ${{ inputs.generate-standard-tags }}
+      EXTRA_TAGS: ${{ inputs.extra-tags }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -88,23 +88,35 @@ jobs:
         env:
           PROJECT_VERSION: ${{ steps.maven.outputs.project_version }}
         run: |
+
           echo "IMAGE_REPOSITORY=${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph" >> "$GITHUB_ENV"
-          echo "IMAGE_TAG=${PROJECT_VERSION}${IMAGE_TAG_ENV:+-${IMAGE_TAG_ENV}}${IMAGE_TAG_SUFFIX:+-${IMAGE_TAG_SUFFIX}}" >> "$GITHUB_ENV"
-          echo "IMAGE_TAG_LATEST=${PROJECT_VERSION}${IMAGE_TAG_ENV:+-${IMAGE_TAG_ENV}}-latest" >> "$GITHUB_ENV"
+
+          tagsArray=()
+
+          if [[ "$GENERATE_STANDARD_TAGS" == "true" ]]; then
+            tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-$(date -u +'%Y%m%d%H%M%S')") 
+            tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-${GITHUB_SHA}")
+            tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-${extra-tags}")
+            tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}")      
+          fi
+
+          echo "image_tags=${tagsArray[*]}" >> "$GITHUB_ENV"
 
       - name: Build container
         run: |
-          echo "Building image: $IMAGE_REPOSITORY:$IMAGE_TAG"
+          for image_tag in $image_tags; do
+            tag_cli+=(--tag "$image_tag")
+          done
+
           docker build --no-cache \
             --build-arg PROJECT_VERSION="${{ steps.maven.outputs.project_version }}" \
-            --tag "$IMAGE_REPOSITORY:$IMAGE_TAG" \       
-            --tag "$IMAGE_REPOSITORY:$IMAGE_TAG_LATEST" \
-           --file "${{ github.workspace }}/sag-docker/Dockerfile" .
+            "${tag_cli}" \
+            --file "${{ github.workspace }}/sag-docker/Dockerfile" .
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # v0.35.0
         with:
-          image-ref: ${{ env.IMAGE_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          image-ref: ${{ env.IMAGE_REPOSITORY }}:${{ env.IMAGE_TAG_SHA }}
           format: table
           exit-code: 1
           ignore-unfixed: true
@@ -113,5 +125,6 @@ jobs:
 
       - name: Push container to ECR
         run: |
-          docker push "$IMAGE_REPOSITORY:$IMAGE_TAG"
-          docker push "$IMAGE_REPOSITORY:$IMAGE_TAG_LATEST"
+          for image_tag in $image_tags; do
+            docker push "$image_tag"
+          done
