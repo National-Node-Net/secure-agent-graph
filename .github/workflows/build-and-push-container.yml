@@ -23,8 +23,8 @@ on:
         required: false
         default: false
         type: boolean
-      extra-tags:
-        description: Optional space-separated tags appended to the Maven project version
+      extra-tag:
+        description: Optional tag appended to the Maven project version
         required: false
         default: ''
         type: string
@@ -39,7 +39,7 @@ jobs:
     env:
       MAVEN_CLI_OPTS: --batch-mode --no-transfer-progress
       GENERATE_NONPROD_TAGS: ${{ inputs.generate-nonprod-tags }}
-      EXTRA_TAGS: ${{ inputs.extra-tags }}
+      EXTRA_TAG: ${{ inputs.extra-tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -92,7 +92,7 @@ jobs:
           if [[ "$GENERATE_NONPROD_TAGS" == "true" ]]; then
             tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-$(date -u +'%Y%m%d%H%M%S')") 
             tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-${GITHUB_SHA}")
-            tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-${EXTRA_TAGS}")
+            tagsArray+=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}-${EXTRA_TAG}")
           else
             tagsArray=("${IMAGE_REPOSITORY}:${PROJECT_VERSION}")      
           fi
@@ -105,7 +105,7 @@ jobs:
           for image_tag in $image_tags; do
             tag_cli+=(--tag "$image_tag")
           done
-          
+
           docker build --no-cache \
             --build-arg PROJECT_VERSION="${{ steps.maven.outputs.project_version }}" \
             "${tag_cli[@]}" \
