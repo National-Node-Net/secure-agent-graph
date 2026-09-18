@@ -107,7 +107,7 @@ jobs:
       - name: Build container
         run: |
           for image_tag in $image_tags; do
-            tag_cli+=("--tag $image_tag")
+            tag_cli+=(--tag "$image_tag")
           done
 
           printf 'tag_cli item: <%s>\n' "${tag_cli[@]}"
