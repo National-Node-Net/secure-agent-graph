@@ -59,12 +59,12 @@ jobs:
           mkdir -p ~/.m2
           echo "<settings><servers><server><id>github</id><username>${{ github.actor }}</username><password>${{ secrets.GH_PACKAGES_PAT }}</password></server></servers></settings>" > ~/.m2/settings.xml
 
-      # - name: Build with Maven
-      #   id: maven
-      #   run: |
-      #     mvn clean install $MAVEN_CLI_OPTS -Dgpg.skip=true -Dlicense.skip=true
-      #     PROJECT_VERSION=$(mvn -q -f pom.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
-      #     echo "project_version=$PROJECT_VERSION" >> "$GITHUB_OUTPUT"
+        # - name: Build with Maven
+        #   id: maven
+        #   run: |
+        #     mvn clean install $MAVEN_CLI_OPTS -Dgpg.skip=true -Dlicense.skip=true
+        #     PROJECT_VERSION=$(mvn -q -f pom.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+        #     echo "project_version=$PROJECT_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Retain target outputs
         uses: actions/upload-artifact@v7
@@ -86,7 +86,7 @@ jobs:
 
       - name: Set image details
         env:
-          PROJECT_VERSION: "0.0.0" # ${{ steps.maven.outputs.project_version }}
+          PROJECT_VERSION: "0.0.0"                      ## ${{ steps.maven.outputs.project_version }}
         run: |
 
           IMAGE_REPOSITORY="${{ steps.login-ecr.outputs.registry }}/ndtp/secure-agent-graph"
