@@ -144,3 +144,9 @@ jobs:
           prerelease: false
           files: |
             sbom.spdx.json
+
+  build-release-container:
+    name: Build and push release image
+    needs: [versioning, create-git-release]
+    uses: ./.github/workflows/build-and-push-container.yml
+    secrets: inherit
