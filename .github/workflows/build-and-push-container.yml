@@ -124,5 +124,5 @@ jobs:
       - name: Push container to ECR
         run: |
           for image_tag in $image_tags; do
-            echo docker push "$image_tag"
+            docker push "$image_tag"
           done
