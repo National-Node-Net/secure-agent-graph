@@ -89,7 +89,7 @@
 
     <!-- Dependency versions -->
     <!-- Internal dependencies -->
-    <dependency.rdf-abac>0.90.0</dependency.rdf-abac>
+    <dependency.rdf-pbac>0.92.0</dependency.rdf-pbac>
     <dependency.fuseki-kafka>0.90.0</dependency.fuseki-kafka>
     <dependency.jena>5.2.0</dependency.jena>
     <dependency.fuseki-server>${dependency.jena}</dependency.fuseki-server>
@@ -114,7 +114,6 @@
     <dependency.testcontainers>1.20.4</dependency.testcontainers>
 
     <dependency.yaml-config>0.90.0</dependency.yaml-config>
-
   </properties>
 
   <modules>
@@ -171,8 +170,8 @@
       <dependency>
         <!-- Used in sag-system -->
         <groupId>uk.gov.dbt.ndtp.jena</groupId>
-        <artifactId>rdf-abac-fuseki</artifactId>
-        <version>${dependency.rdf-abac}</version>
+        <artifactId>rdf-pbac-fuseki</artifactId>
+        <version>${dependency.rdf-pbac}</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.logging.log4j</groupId>
@@ -182,8 +181,8 @@
       </dependency>
       <dependency>
         <groupId>uk.gov.dbt.ndtp.jena</groupId>
-        <artifactId>rdf-abac-fmod</artifactId>
-        <version>${dependency.rdf-abac}</version>
+        <artifactId>rdf-pbac-fmod</artifactId>
+        <version>${dependency.rdf-pbac}</version>
       </dependency>
 
       <!-- Authentication -->
@@ -358,6 +357,17 @@
         <groupId>uk.gov.dbt.ndtp.public</groupId>
         <artifactId>fuseki-yaml-config</artifactId>
         <version>${dependency.yaml-config}</version>
+        <exclusions>
+          <!-- Pulls in rdf-abac, whose classes share packages with rdf-pbac. -->
+          <exclusion>
+            <groupId>uk.gov.dbt.ndtp.jena</groupId>
+            <artifactId>rdf-abac-lib</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>uk.gov.dbt.ndtp.jena</groupId>
+            <artifactId>rdf-abac-fuseki</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
