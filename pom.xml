@@ -89,7 +89,7 @@
 
     <!-- Dependency versions -->
     <!-- Internal dependencies -->
-    <dependency.rdf-pbac>0.91.0-SNAPSHOT</dependency.rdf-pbac>
+    <dependency.rdf-pbac>0.92.0</dependency.rdf-pbac>
     <dependency.fuseki-kafka>0.90.0</dependency.fuseki-kafka>
     <dependency.jena>5.2.0</dependency.jena>
     <dependency.fuseki-server>${dependency.jena}</dependency.fuseki-server>
@@ -114,7 +114,6 @@
     <dependency.testcontainers>1.20.4</dependency.testcontainers>
 
     <dependency.yaml-config>0.90.0</dependency.yaml-config>
-
   </properties>
 
   <modules>
