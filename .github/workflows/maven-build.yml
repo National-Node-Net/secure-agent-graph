@@ -14,23 +14,23 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-name: SC Graph Build & Deploy
+name: Maven Build and Test
 
 on:
   push:
     branches:
+      - 'main'
       - 'develop'
-  workflow_dispatch:
-
+  pull_request:
+    branches:
+      - 'main'
+      - 'develop'
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}
   cancel-in-progress: ${{ !contains(github.ref_name, 'release/') }}
 
 permissions:
     contents: read
-    packages: write
-    id-token: write
-
 jobs:
   build-maven:
     runs-on: ubuntu-latest
@@ -41,10 +41,10 @@ jobs:
       FUSEKI_SERVER_VERSION: ${{ steps.get-version-maven.outputs.FUSEKI_SERVER_VERSION }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Set up JDK 21
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v5
       with:
         java-version: '21'
         distribution: 'temurin'
@@ -74,32 +74,8 @@ jobs:
         echo $PROJECT_VERSION
 
     - name: Retain target outputs
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: all-targets
         path: '**/target/'
 
-
-  build-tag-push:
-    needs: build-maven
-    uses: National-Node-Net/aws-integration-testing/.github/workflows/build-tag-push-docker-image-to-ecr.yml@main
-    with:
-        image_tag: ${{needs.build-maven.outputs.PROJECT_VERSION}}-${{github.sha}}
-        container_repo: 'secure-agent-graph'
-        path_to_dockerfile: 'sag-docker'
-        project_version: ${{needs.build-maven.outputs.PROJECT_VERSION}}
-    secrets: inherit
-
-  copy-config-files:
-    needs: build-maven
-    uses: National-Node-Net/aws-integration-testing/.github/workflows/copy-files-to-ec2-instance.yml@main
-    with:
-      directory_name: 'sag-docker/mnt'
-    secrets: inherit
-
-  docker-compose-up:
-    needs: [copy-config-files, build-tag-push]
-    uses: National-Node-Net/aws-integration-testing/.github/workflows/docker-compose-up.yml@main
-    with:
-      docker-compose-file-name: 'docker-compose-github.yaml'
-    secrets: inherit

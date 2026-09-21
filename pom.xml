@@ -30,7 +30,7 @@
   <groupId>uk.gov.dbt.ndtp.secure-agent.graph</groupId>
   <artifactId>sag-base</artifactId>
   <packaging>pom</packaging>
-  <version>0.90.0</version>
+  <version>0.90.3</version>
 
   <name>IANode Secure Agent Graph - Parent</name>
   <description>IANode Secure Agent Graph</description>
@@ -64,7 +64,7 @@
   <properties>
     <!-- Build properties -->
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.build.outputTimestamp>2024-12-23T08:58:20Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-09-17T14:49:22Z</project.build.outputTimestamp>
     <java.version>21</java.version>
 
     <!-- Maven Plugin versions -->
