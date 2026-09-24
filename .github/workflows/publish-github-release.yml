@@ -144,12 +144,3 @@ jobs:
           prerelease: false
           files: |
             sbom.spdx.json
-
-  build-release-container:
-    permissions:
-      contents: read
-      id-token: write
-    name: Build and push release image
-    needs: [versioning, create-git-release]
-    uses: ./.github/workflows/build-and-push-container.yml
-    secrets: inherit
