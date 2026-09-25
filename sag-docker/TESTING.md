@@ -120,7 +120,7 @@ By default, this is disabled (via `JWK_URL=disabled`) which you will need to edi
 The previous script,`d-run`, still exists which does the same as the above and is subject to the same caveats.
 
 ---
-© Crown Copyright 2025. This work has been developed by the National Digital Twin Programme and is legally attributed to the Department for Business and Trade (UK) as the
+© Crown Copyright 2026. This work has been developed by the National Digital Twin Programme and is legally attributed to the UK's Department for Business, Innovation, Science and Trade (BIST) as the
 governing entity.
 
 Licensed under the Open Government Licence v3.0.
