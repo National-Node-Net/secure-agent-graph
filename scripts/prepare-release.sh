@@ -119,7 +119,7 @@ This PR was generated from script \`/scripts/prepare-release.sh\`.
 
 4. Open the release PR into \`main\`:
 
-       gh pr create --base main --head release/${version} --title "Release ${version}" --body "Release ${version}."
+       gh pr create --base main --head release/${version} --title "Promote release ${version} to main" --body "Promote release/${version} to main."
 
 5. Review and merge the \`release/${version}\` PR into \`main\`.
 
