@@ -26,7 +26,6 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "16:00"
-    target-branch: develop
     groups:
       all-actions:
         patterns: ["*"]
