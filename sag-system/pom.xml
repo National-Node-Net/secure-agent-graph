@@ -48,7 +48,7 @@
     <!-- ABAC engine -->
     <dependency>
       <groupId>uk.gov.dbt.ndtp.jena</groupId>
-      <artifactId>rdf-abac-fuseki</artifactId>
+      <artifactId>rdf-pbac-fuseki</artifactId>
     </dependency>
 
     <!-- Jena Fuseki Kafka -->
