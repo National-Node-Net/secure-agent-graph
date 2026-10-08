@@ -19,8 +19,8 @@
 
 
     Modifications made by the National Digital Twin Programme (NDTP)
-    © Crown Copyright 2025. This work has been developed by the National Digital Twin Programme
-    and is legally attributed to the Department for Business and Trade (UK) as the governing entity.
+    © Crown Copyright 2026. This work has been developed by the National Digital Twin Programme
+    and is legally attributed to the UK's Department for Business, Innovation, Science and Trade (BIST) as the governing entity.
 -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -56,7 +56,7 @@
     <developer>
       <name>IANode Developers</name>
       <email>NDTP@businessandtrade.gov.uk</email>
-      <organization>Department for Business and Trade</organization>
+      <organization>UK Department for Business, Innovation, Science and Trade (BIST)</organization>
       <organizationUrl>https://ndtp.co.uk</organizationUrl>
     </developer>
   </developers>
@@ -89,7 +89,7 @@
 
     <!-- Dependency versions -->
     <!-- Internal dependencies -->
-    <dependency.rdf-abac>0.90.0</dependency.rdf-abac>
+    <dependency.rdf-pbac>0.93.2</dependency.rdf-pbac>
     <dependency.fuseki-kafka>0.90.0</dependency.fuseki-kafka>
     <dependency.jena>5.2.0</dependency.jena>
     <dependency.fuseki-server>${dependency.jena}</dependency.fuseki-server>
@@ -114,7 +114,6 @@
     <dependency.testcontainers>1.20.4</dependency.testcontainers>
 
     <dependency.yaml-config>0.90.0</dependency.yaml-config>
-
   </properties>
 
   <modules>
@@ -171,8 +170,8 @@
       <dependency>
         <!-- Used in sag-system -->
         <groupId>uk.gov.dbt.ndtp.jena</groupId>
-        <artifactId>rdf-abac-fuseki</artifactId>
-        <version>${dependency.rdf-abac}</version>
+        <artifactId>rdf-pbac-fuseki</artifactId>
+        <version>${dependency.rdf-pbac}</version>
         <exclusions>
           <exclusion>
             <groupId>org.apache.logging.log4j</groupId>
@@ -182,8 +181,8 @@
       </dependency>
       <dependency>
         <groupId>uk.gov.dbt.ndtp.jena</groupId>
-        <artifactId>rdf-abac-fmod</artifactId>
-        <version>${dependency.rdf-abac}</version>
+        <artifactId>rdf-pbac-fmod</artifactId>
+        <version>${dependency.rdf-pbac}</version>
       </dependency>
 
       <!-- Authentication -->
@@ -358,6 +357,17 @@
         <groupId>uk.gov.dbt.ndtp.public</groupId>
         <artifactId>fuseki-yaml-config</artifactId>
         <version>${dependency.yaml-config}</version>
+        <exclusions>
+          <!-- Pulls in rdf-abac, whose classes share packages with rdf-pbac. -->
+          <exclusion>
+            <groupId>uk.gov.dbt.ndtp.jena</groupId>
+            <artifactId>rdf-abac-lib</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>uk.gov.dbt.ndtp.jena</groupId>
+            <artifactId>rdf-abac-fuseki</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
