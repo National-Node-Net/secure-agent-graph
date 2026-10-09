@@ -447,6 +447,110 @@ class TestFKProcessorSAG {
         runTestProcessorSAGWithGivenDSG(action, DatasetGraphFactory.createTxnMem());
     }
 
+    @Test
+    void processorSAG_sparqlUpdate_ignored() {
+        TestAction action = (FKProcessor proc, FusekiServer server, DatasetGraph dsgBase) -> {
+            LibTestsSAG.withLevel(FusekiKafka.LOG, "FATAL", ()->
+                processorRequest(proc, "INSERT DATA { <http://ex/s> <http://ex/p> 'update' }",
+                                 WebContent.contentTypeSPARQLUpdate, null));
+            checkDatasetSize(dsgBase, 0);
+        };
+        runTestProcessorSAGWithAuth(action);
+    }
+
+    @Test
+    void processorSAG_load_trig_labelsGraph() {
+        TestAction action = (FKProcessor proc, FusekiServer server, DatasetGraph dsgBase) -> {
+            String URL = server.datasetURL(DS_NAME);
+            processorRequest(proc, """
+                    PREFIX : <http://example/>
+                    PREFIX authz: <http://ndtp.co.uk/security#>
+                    :s :p "permit" .
+                    :s :p "other" .
+                    GRAPH authz:labels {
+                        [ authz:pattern ':s :p "permit"' ; authz:label "PERMIT" ] .
+                        [ authz:pattern ':s :p "other"' ;  authz:label "OTHER" ] .
+                    }
+                    """, WebContent.contentTypeTriG, null);
+            checkDatasetSize(dsgBase, 2);
+            assertEquals(1L, count(URL, QUERY_ALL, USER_PERMIT), "Count (user:permit)");
+            assertEquals(1L, count(URL, QUERY_ALL, USER_OTHER), "Count (user:other)");
+            assertEquals(0L, count(URL, QUERY_ALL, USER_PUBLIC), "Count (user:public)");
+        };
+        runTestProcessorSAGWithAuth(action);
+    }
+
+    @Test
+    void processorSAG_load_badSyntax() {
+        TestAction action = (FKProcessor proc, FusekiServer server, DatasetGraph dsgBase) -> {
+            LibTestsSAG.withLevel(FusekiKafka.LOG, "FATAL", ()->
+                    processorRequest(proc, "<http://ex/s> <http://ex/p> .", WebContent.contentTypeTurtle, attrPermit));
+            checkDatasetSize(dsgBase, 0);
+        };
+        runTestProcessorSAGWithAuth(action);
+    }
+
+    /** Labels store is unchanged; the quad is still stored in the base dataset, like processorSAG_patch_5_quad. */
+    @Test
+    void processorSAG_patch_7_labelsGraph_rejected() {
+        TestAction action = (FKProcessor proc, FusekiServer server, DatasetGraph dsgBase) -> {
+            String URL = server.datasetURL(DS_NAME);
+            LibTestsSAG.withLevel(FusekiKafka.LOG, "FATAL", ()->
+                processorRequest(proc, """
+                        A <http://ex/s> <http://ndtp.co.uk/security#pattern> "<http://ex/s> <http://ex/p> 'o'" <http://ndtp.co.uk/security#labels> .
+                        """, WebContent.contentTypePatch, null));
+            assertEquals(0L, getDatasetABAC(server).labelsStore().asGraph().size(), "Labels store changed");
+            checkDatasetSize(dsgBase, 1);
+            assertEquals(0L, count(URL, QUERY_ALL, USER_PERMIT));
+        };
+        runTestProcessorSAGWithAuth(action);
+    }
+
+    @Test
+    void processorSAG_patch_8_delete_quad_ignored() {
+        TestAction action = (FKProcessor proc, FusekiServer server, DatasetGraph dsgBase) -> {
+            processorRequest(proc, """
+                    A <http://ex/s> <http://ex/p> "triple" .
+                    """, WebContent.contentTypePatch, attrPermit);
+            checkDatasetSize(dsgBase, 1);
+            LibTestsSAG.withLevel(FusekiKafka.LOG, "ERROR", ()->
+                processorRequest(proc, """
+                        D <http://ex/s> <http://ex/p> "triple" <http://ex/namedGraph> .
+                        """, WebContent.contentTypePatch, attrPermit));
+            checkDatasetSize(dsgBase, 1);
+        };
+        runTestProcessorSAGWithAuth(action);
+    }
+
+    @Test
+    void processorSAG_load_trig_differentDSG_noLabels() {
+        TestAction action = (FKProcessor proc, FusekiServer server, DatasetGraph dsgBase) -> {
+            DatasetGraph dsg = server.getDataAccessPointRegistry().get(DS_NAME).getDataService().getDataset();
+            processorRequest(proc, """
+                    PREFIX : <http://example/>
+                    :s :p "default" .
+                    GRAPH :g { :s :p "named" }
+                    """, WebContent.contentTypeTriG, null);
+            checkDatasetSize(dsg, 2);
+        };
+        runTestProcessorSAGWithGivenDSG(action, DatasetGraphFactory.createTxnMem());
+    }
+
+    @Test
+    void processorSAG_load_trig_differentDSG_labelsGraph_rejected() {
+        TestAction action = (FKProcessor proc, FusekiServer server, DatasetGraph dsgBase) -> {
+            DatasetGraph dsg = server.getDataAccessPointRegistry().get(DS_NAME).getDataService().getDataset();
+            LibTestsSAG.withLevel(FusekiKafka.LOG, "FATAL", ()->
+                processorRequest(proc, """
+                        PREFIX : <http://example/>
+                        PREFIX authz: <http://ndtp.co.uk/security#>
+                        GRAPH authz:labels { [ authz:pattern ':s :p "o"' ; authz:label "PERMIT" ] . }
+                        """, WebContent.contentTypeTriG, null));
+            checkDatasetSize(dsg, 0);
+        };
+        runTestProcessorSAGWithGivenDSG(action, DatasetGraphFactory.createTxnMem());
+    }
+
     private long count(String URL, String queryString, String user) {
         RowSet rowSet =
                 (user == null )
