@@ -11,6 +11,9 @@ updates:
       day: "sunday"
       time: "16:00"
     target-branch: develop
+    groups:
+      maven-dependencies:
+        patterns: ["*"]
 
   - package-ecosystem: "docker"
     directory: "/sag-docker"
@@ -19,6 +22,9 @@ updates:
       day: "sunday"
       time: "16:00"
     target-branch: develop
+    groups:
+      docker-images:
+        patterns: ["*"]
 
   # target-branch intentionally omitted: action updates target main (auto-merged) and are back-merged to develop.
   - package-ecosystem: "github-actions"
