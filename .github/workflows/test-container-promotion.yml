@@ -1,0 +1,20 @@
+# Temporary workflow for testing promote-release-container.yml before it is on main.
+name: Test Container Promotion
+
+on:
+  push:
+    branches:
+      - feature/dpav501-cicd-promotion
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  test-promotion:
+    uses: ./.github/workflows/promote-release-container.yml
+    with:
+      source: dev
+      destination: staging
+      version: 0.90.3
+    secrets: inherit
