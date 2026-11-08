@@ -127,5 +127,3 @@ jobs:
           ignore-unfixed: true
           severity: CRITICAL,HIGH
           trivyignores: .trivyignore
-          trivyignores: .trivyignore
-      
