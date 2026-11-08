@@ -58,6 +58,7 @@ jobs:
           java-version: "21"
           distribution: temurin
           cache: maven
+          server-password: GH_PACKAGES_PAT
 
       # New for SAG: create the dependency, agent, and SBOM files copied by
       # sag-docker/Dockerfile. Tests run in the preceding CI workflow.
