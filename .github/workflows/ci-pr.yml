@@ -97,10 +97,15 @@ jobs:
           server-password: GH_PACKAGES_PAT
 
       # Build the Docker module's dependency, agent, and SBOM outputs on this runner.
-      # Tests run in the separate build-and-test job.
+      # Tests run in the separate build-and-test job. Do not restore the original
+      # `clean install` command below: it reruns the Testcontainers tests here,
+      # which failed before this job reached the Docker build. Docker only needs
+      # the target outputs created during the package phase.
       - name: Build Maven artifacts for the image
         env:
           GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
+        # Original command, retained for context:
+        # run: mvn clean install $MAVEN_CLI_OPTS -Dgpg.skip=true -Dlicense.skip=true
         run: mvn clean package $MAVEN_CLI_OPTS -DskipTests -Dgpg.skip=true -Dlicense.skip=true
 
       # Read the Maven version used in the image tag and SBOM filename.
@@ -121,5 +126,6 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           severity: CRITICAL,HIGH
+          trivyignores: .trivyignore
           trivyignores: .trivyignore
       

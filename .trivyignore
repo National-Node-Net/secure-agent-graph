@@ -1,0 +1,3 @@
+# SPDX-License-Identifier: Apache-2.0
+# Add approved vulnerability IDs here, one per line, with a justification in a
+# nearby comment. Keep this file empty when no exceptions are required.
