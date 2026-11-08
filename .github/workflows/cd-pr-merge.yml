@@ -71,3 +71,4 @@ jobs:
       aws_account_number: ${{ vars.DEV_AWS_ACCOUNT_ID }}
       repo_name: ndtp/secure-agent-graph
       version: ${{ needs.versioning.outputs.version }}
+    secrets: inherit

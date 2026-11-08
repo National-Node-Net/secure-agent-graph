@@ -59,10 +59,19 @@ jobs:
           distribution: temurin
           cache: maven
 
+      # New for SAG: create the dependency, agent, and SBOM files copied by
+      # sag-docker/Dockerfile. Tests run in the preceding CI workflow.
+      - name: Build Maven artifacts for the image
+        env:
+          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
+        run: mvn clean package $MAVEN_CLI_OPTS -DskipTests -Dgpg.skip=true -Dlicense.skip=true
+
       # Read the Maven version used in the JAR filename.
       - name: Get project version
         id: get-version
-        run: echo "project_version=$(./mvnw $MAVEN_CLI_OPTS help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_OUTPUT"
+        # Switch back to the retained wrapper command once SAG has a Maven wrapper.
+        # run: echo "project_version=$(./mvnw $MAVEN_CLI_OPTS help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_OUTPUT"
+        run: echo "project_version=$(mvn $MAVEN_CLI_OPTS help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_OUTPUT"
 
       # Build and tag the same image by commit SHA and by the supplied release version.
       - name: Build Docker image
@@ -72,10 +81,10 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           docker build --no-cache \
-            --build-arg JAR_NAME="secure-agent-graph-${{ steps.get-version.outputs.project_version }}" \
+            --build-arg PROJECT_VERSION="$VERSION" \
             -t "$ECR_REGISTRY/$REPO_NAME:${{ github.sha }}" \
             -t "$ECR_REGISTRY/$REPO_NAME:$VERSION" \
-            -f docker/Dockerfile --target secure-agent-graph .
+            -f sag-docker/Dockerfile .
 
       # Assume the GitHub OIDC role in the AWS account that owns the target ECR repository.
       - name: Configure AWS credentials
