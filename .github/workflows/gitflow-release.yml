@@ -45,7 +45,9 @@ jobs:
       # Prevent a release branch from publishing an image with a mismatched POM version.
       - name: Verify POM version
         run: |
-          POM_VERSION="$(./mvnw --batch-mode --no-transfer-progress help:evaluate -Dexpression=project.version -q -DforceStdout)"
+          # Switch back to the retained wrapper command once SAG has a Maven wrapper.
+          # POM_VERSION="$(./mvnw --batch-mode --no-transfer-progress help:evaluate -Dexpression=project.version -q -DforceStdout)"
+          POM_VERSION="$(mvn --batch-mode --no-transfer-progress help:evaluate -Dexpression=project.version -q -DforceStdout)"
           echo "POM version: $POM_VERSION"
           test "$POM_VERSION" = "${{ steps.branch_version.outputs.version }}"
 
