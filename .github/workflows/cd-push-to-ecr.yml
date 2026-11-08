@@ -105,13 +105,11 @@ jobs:
           ECR_REGISTRY: ${{ inputs.aws_account_number }}.dkr.ecr.eu-west-2.amazonaws.com
           REPO_NAME: ${{ inputs.repo_name }}
         run: |
-          echo "TEMPORARILY COMMENT OUT"
-          # docker image push --all-tags "$ECR_REGISTRY/$REPO_NAME"
+          docker image push --all-tags "$ECR_REGISTRY/$REPO_NAME"
 
       # Record the newest image in the workflow summary for easy release verification.
       - name: Verify pushed image
         env:
           REPO_NAME: ${{ inputs.repo_name }}
         run: |
-          echo "TEMPORARILY COMMENT OUT"
-          # aws ecr describe-images --repository-name "$REPO_NAME" --query 'sort_by(imageDetails, &imagePushedAt)[-1]' --output table >> "$GITHUB_STEP_SUMMARY"
+          aws ecr describe-images --repository-name "$REPO_NAME" --query 'sort_by(imageDetails, &imagePushedAt)[-1]' --output table >> "$GITHUB_STEP_SUMMARY"
