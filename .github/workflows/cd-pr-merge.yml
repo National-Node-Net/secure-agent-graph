@@ -67,5 +67,5 @@ jobs:
     uses: ./.github/workflows/cd-push-to-ecr.yml
     with:
       aws_account_number: ${{ vars.DEV_AWS_ACCOUNT_ID }}
-      repo_name: ndtp/identity-management-service
+      repo_name: ndtp/
       version: ${{ needs.versioning.outputs.version }}
