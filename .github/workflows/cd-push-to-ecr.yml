@@ -72,10 +72,10 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           docker build --no-cache \
-            --build-arg JAR_NAME="identity-management-service-${{ steps.get-version.outputs.project_version }}" \
+            --build-arg JAR_NAME="secure-agent-graph-${{ steps.get-version.outputs.project_version }}" \
             -t "$ECR_REGISTRY/$REPO_NAME:${{ github.sha }}" \
             -t "$ECR_REGISTRY/$REPO_NAME:$VERSION" \
-            -f docker/Dockerfile --target identity-management-service .
+            -f docker/Dockerfile --target secure-agent-graph .
 
       # Assume the GitHub OIDC role in the AWS account that owns the target ECR repository.
       - name: Configure AWS credentials
