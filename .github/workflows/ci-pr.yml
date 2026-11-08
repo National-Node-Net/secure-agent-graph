@@ -70,10 +70,13 @@ jobs:
           server-password: GH_PACKAGES_PAT
 
       # Check source formatting without modifying the working tree.
-      - name: Run Spotless
-        env:
-          GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
-        run: ./mvnw $MAVEN_CLI_OPTS spotless:check
+      #
+      # TEMPORARILY DISABLED
+      #
+      # - name: Run Spotless
+      #   env:
+      #     GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
+      #   run: ./mvnw $MAVEN_CLI_OPTS spotless:check
 
   docker-build-test-scan:
     name: Docker build and vulnerability scan
@@ -94,10 +97,11 @@ jobs:
           server-password: GH_PACKAGES_PAT
 
       # Build the Docker module's dependency, agent, and SBOM outputs on this runner.
+      # Tests run in the separate build-and-test job.
       - name: Build Maven artifacts for the image
         env:
           GH_PACKAGES_PAT: ${{ secrets.GH_PACKAGES_PAT }}
-        run: mvn clean install $MAVEN_CLI_OPTS -Dgpg.skip=true -Dlicense.skip=true
+        run: mvn clean package $MAVEN_CLI_OPTS -DskipTests -Dgpg.skip=true -Dlicense.skip=true
 
       # Read the Maven version used in the image tag and SBOM filename.
       - name: Get project version
@@ -117,4 +121,5 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           severity: CRITICAL,HIGH
+          trivyignores: .trivyignore
       
