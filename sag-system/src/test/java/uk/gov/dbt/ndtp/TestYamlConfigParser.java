@@ -38,6 +38,7 @@ import org.apache.jena.sparql.exec.http.QueryExecHTTP;
 import org.apache.jena.sparql.exec.http.QueryExecHTTPBuilder;
 import org.apache.jena.sparql.resultset.ResultSetCompare;
 import org.junit.jupiter.api.*;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.shaded.org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -50,8 +51,8 @@ import static uk.gov.dbt.ndtp.core.SecureAgentGraph.construct;
 import static org.junit.jupiter.api.Assertions.*;
 
 /*
-* Test SAG usage of YAML config files.
-*/
+ * Test SAG usage of YAML config files.
+ */
 class TestYamlConfigParserDocker {
 
     private static final String DIR = "src/test/files";
@@ -140,14 +141,11 @@ class TestYamlConfigParserDocker {
         QueryExec qExec2 = QueryExec.dataset(DatasetGraphFactory.create(comparisonModel.getGraph())).query(query).build();
         expectedRSRtdl = qExec2.select().rewindable();
 
-        // for the kafka connector tests
-        mock = new MockKafka();
-        Properties consumerProps = new Properties();
-        consumerProps.put("bootstrap.servers", mock.getServer());
-        Properties producerProps = new Properties();
-        producerProps.put("bootstrap.servers", mock.getServer());
-
-        mock.createTopic("RDF0");
+        // for the kafka connector tests (needs Docker, skipped when unavailable)
+        if (DockerClientFactory.instance().isDockerAvailable()) {
+            mock = new MockKafka();
+            mock.createTopic("RDF0");
+        }
     }
 
     @BeforeEach
@@ -169,7 +167,9 @@ class TestYamlConfigParserDocker {
 
     @AfterAll
     public static void after() {
-        mock.stop();
+        if (mock != null) {
+            mock.stop();
+        }
     }
 
 
@@ -199,6 +199,7 @@ class TestYamlConfigParserDocker {
 
     @Test
     void yaml_config_kafka_connector() {
+        Assumptions.assumeTrue(mock != null, "Docker not available - skipping Kafka test");
         String stateDir = "target/state";
         FileOps.ensureDir(stateDir);
         FileOps.clearDirectory(stateDir);
