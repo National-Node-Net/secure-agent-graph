@@ -218,6 +218,11 @@
         <artifactId>snappy-java</artifactId>
         <version>1.1.10.12</version>
       </dependency>
+      <dependency>
+        <groupId>at.yawk.lz4</groupId>
+        <artifactId>lz4-java</artifactId>
+        <version>1.11.4</version>
+      </dependency>
       <!-- Via rdf-pbac-lib and graphql-jena-lib (graphql-java shades guava) -->
       <dependency>
         <groupId>com.google.guava</groupId>

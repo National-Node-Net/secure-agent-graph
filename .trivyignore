@@ -1,3 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 # Add approved vulnerability IDs here, one per line, with a justification in a
 # nearby comment. Keep this file empty when no exceptions are required.
+
+# CVE-2026-43871 - Apache Thrift denial of service (TCompactProtocol varint loop).
+# Fixed in libthrift 0.24.0, which is incompatible with TDB2 in Jena 5.x; the fix
+# needs Jena 6.2+, which rdf-pbac and jena-fuseki-kafka do not support yet.
+# Accepted risk until the Jena 6 upgrade - remove this entry when that lands.
+CVE-2026-43871
