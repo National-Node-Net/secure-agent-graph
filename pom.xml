@@ -91,7 +91,7 @@
     <!-- Internal dependencies -->
     <dependency.rdf-pbac>0.93.2</dependency.rdf-pbac>
     <dependency.fuseki-kafka>0.90.0</dependency.fuseki-kafka>
-    <dependency.jena>5.2.0</dependency.jena>
+    <dependency.jena>5.6.0</dependency.jena>
     <dependency.fuseki-server>${dependency.jena}</dependency.fuseki-server>
     <dependency.graphql>0.90.0</dependency.graphql>
     <dependency.jwt-servlet-auth>0.90.0</dependency.jwt-servlet-auth>
