@@ -1,3 +1,5 @@
+![OSPO compliance](https://raw.githubusercontent.com/National-Node-Net/ndt-overwatch/sync/governance-badges/repositories/secure-agent-graph/ospo-compliance.svg) ![Days since last commit to develop branch](https://raw.githubusercontent.com/National-Node-Net/ndt-overwatch/sync/governance-badges/repositories/secure-agent-graph/develop-activity.svg) ![Last checked](https://raw.githubusercontent.com/National-Node-Net/ndt-overwatch/sync/governance-badges/repositories/secure-agent-graph/last-checked.svg)
+
 # README  
 
 **Repository:** `secure-agent-graph`  
